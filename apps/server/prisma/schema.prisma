@@ -11,8 +11,88 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  BANK
+  CREDIT_CARD
+  CASH
+  INVESTMENT
+  LOAN
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  name      String?
+  currency  String     @default("KRW")
+  locale    String     @default("ko-KR")
+  timezone  String     @default("Asia/Seoul")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  accounts      Account[]
+  categories    Category[]
+  transactions  Transaction[]
 }
 
 model Account {
-  id        String   @id @default(uuid())
+  id         String           @id @default(uuid())
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  name       String
+  type       AccountType
+  balance    Decimal          @default(0)
+  isDefault  Boolean          @default(false)
+  isArchived Boolean          @default(false)
+  sortOrder  Int              @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  transactions Transaction[]
 }
+
+model Category {
+  id        String           @id @default(uuid())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  name      String
+  type      TransactionType
+  parentId  String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  parent   Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[]  @relation("CategoryHierarchy")
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String           @id @default(uuid())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  account     Account          @relation(fields: [accountId], references: [id])
+  accountId   String
+  category    Category         @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  type        TransactionType
+  /// 항상 양수 금액, type 으로 수입/지출/이체 구분
+  amount      Decimal
+  date        DateTime
+  scheduledAt DateTime?
+  isFixed     Boolean          @default(false)
+  memo        String?
+  /// 라벨 문자열 배열을 JSON 으로 저장
+  labels      Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
