@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../common/config/apiConfig';
+import { authorizedFetch } from '../../common/utils/authorizedFetch';
 
 export interface MonthlyCategoryBreakdownItem {
   categoryId: string;
@@ -24,7 +25,7 @@ export const getMonthlySummary = async (
   url.searchParams.set('year', String(year));
   url.searchParams.set('month', String(month));
 
-  const res = await fetch(url.toString());
+  const res = await authorizedFetch(url.toString());
 
   if (!res.ok) {
     throw new Error('월별 요약을 불러오지 못했습니다.');

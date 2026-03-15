@@ -78,6 +78,7 @@ export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   name: 'name',
+  passwordHash: 'passwordHash',
   currency: 'currency',
   locale: 'locale',
   timezone: 'timezone',
@@ -181,6 +182,7 @@ export const UserOrderByRelevanceFieldEnum = {
   id: 'id',
   email: 'email',
   name: 'name',
+  passwordHash: 'passwordHash',
   currency: 'currency',
   locale: 'locale',
   timezone: 'timezone'

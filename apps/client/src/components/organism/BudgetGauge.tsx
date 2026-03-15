@@ -8,10 +8,10 @@ interface BudgetGaugeProps {
   onClick?: () => void
 }
 
-function getProgressColor(percent: number): 'success' | 'warning' | 'error' {
-  if (percent <= 70) return 'success'
-  if (percent <= 90) return 'warning'
-  return 'error'
+function getProgressBarColor(percent: number): 'budgetSafe.main' | 'budgetCaution.main' | 'budgetDanger.main' {
+  if (percent <= 70) return 'budgetSafe.main'
+  if (percent <= 90) return 'budgetCaution.main'
+  return 'budgetDanger.main'
 }
 
 const BudgetGauge: React.FC<BudgetGaugeProps> = ({
@@ -34,10 +34,10 @@ const BudgetGauge: React.FC<BudgetGaugeProps> = ({
         role={onClick ? 'button' : undefined}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-          <Typography variant="body2" fontWeight={500}>
+          <Typography variant="body2" fontWeight={500} color="text.primary">
             {categoryName}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: 'tabular-nums' }}>
             예산 미설정 · {spent.toLocaleString()}원 사용
           </Typography>
         </Box>
@@ -46,7 +46,7 @@ const BudgetGauge: React.FC<BudgetGaugeProps> = ({
   }
 
   const percent = Math.min(100, (spent / budget) * 100)
-  const color = getProgressColor(percent)
+  const barColor = getProgressBarColor(percent)
   const isOver = spent > budget
 
   return (
@@ -62,13 +62,12 @@ const BudgetGauge: React.FC<BudgetGaugeProps> = ({
       role={onClick ? 'button' : undefined}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-        <Typography variant="body2" fontWeight={500}>
+        <Typography variant="body2" fontWeight={500} color="text.primary">
           {categoryName}
         </Typography>
         <Typography
           variant="caption"
-          color={isOver ? 'error.main' : 'text.secondary'}
-          sx={{ fontVariantNumeric: 'tabular-nums' }}
+          sx={{ fontVariantNumeric: 'tabular-nums', color: isOver ? 'budgetDanger.main' : 'text.secondary' }}
         >
           {spent.toLocaleString()} / {budget.toLocaleString()}원
           {budget > 0 && ` (${percent.toFixed(0)}%)`}
@@ -77,11 +76,13 @@ const BudgetGauge: React.FC<BudgetGaugeProps> = ({
       <LinearProgress
         variant="determinate"
         value={isOver ? 100 : percent}
-        color={color}
         sx={{
           height: 8,
           borderRadius: 1,
-          bgcolor: isOver ? 'error.light' : undefined,
+          bgcolor: 'action.hover',
+          '& .MuiLinearProgress-bar': {
+            bgcolor: barColor,
+          },
         }}
       />
     </Box>

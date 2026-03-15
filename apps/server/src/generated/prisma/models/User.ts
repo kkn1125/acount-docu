@@ -28,6 +28,7 @@ export type UserMinAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
+  passwordHash: string | null
   currency: string | null
   locale: string | null
   timezone: string | null
@@ -39,6 +40,7 @@ export type UserMaxAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
+  passwordHash: string | null
   currency: string | null
   locale: string | null
   timezone: string | null
@@ -50,6 +52,7 @@ export type UserCountAggregateOutputType = {
   id: number
   email: number
   name: number
+  passwordHash: number
   currency: number
   locale: number
   timezone: number
@@ -63,6 +66,7 @@ export type UserMinAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  passwordHash?: true
   currency?: true
   locale?: true
   timezone?: true
@@ -74,6 +78,7 @@ export type UserMaxAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  passwordHash?: true
   currency?: true
   locale?: true
   timezone?: true
@@ -85,6 +90,7 @@ export type UserCountAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  passwordHash?: true
   currency?: true
   locale?: true
   timezone?: true
@@ -169,6 +175,7 @@ export type UserGroupByOutputType = {
   id: string
   email: string
   name: string | null
+  passwordHash: string | null
   currency: string
   locale: string
   timezone: string
@@ -201,6 +208,7 @@ export type UserWhereInput = {
   id?: Prisma.StringFilter<"User"> | string
   email?: Prisma.StringFilter<"User"> | string
   name?: Prisma.StringNullableFilter<"User"> | string | null
+  passwordHash?: Prisma.StringNullableFilter<"User"> | string | null
   currency?: Prisma.StringFilter<"User"> | string
   locale?: Prisma.StringFilter<"User"> | string
   timezone?: Prisma.StringFilter<"User"> | string
@@ -216,6 +224,7 @@ export type UserOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  passwordHash?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
@@ -235,6 +244,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   name?: Prisma.StringNullableFilter<"User"> | string | null
+  passwordHash?: Prisma.StringNullableFilter<"User"> | string | null
   currency?: Prisma.StringFilter<"User"> | string
   locale?: Prisma.StringFilter<"User"> | string
   timezone?: Prisma.StringFilter<"User"> | string
@@ -250,6 +260,7 @@ export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  passwordHash?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
@@ -267,6 +278,7 @@ export type UserScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"User"> | string
   email?: Prisma.StringWithAggregatesFilter<"User"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  passwordHash?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   currency?: Prisma.StringWithAggregatesFilter<"User"> | string
   locale?: Prisma.StringWithAggregatesFilter<"User"> | string
   timezone?: Prisma.StringWithAggregatesFilter<"User"> | string
@@ -278,6 +290,7 @@ export type UserCreateInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -293,6 +306,7 @@ export type UserUncheckedCreateInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -308,6 +322,7 @@ export type UserUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -323,6 +338,7 @@ export type UserUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -338,6 +354,7 @@ export type UserCreateManyInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -349,6 +366,7 @@ export type UserUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -360,6 +378,7 @@ export type UserUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -377,6 +396,7 @@ export type UserCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  passwordHash?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
@@ -388,6 +408,7 @@ export type UserMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  passwordHash?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
@@ -399,6 +420,7 @@ export type UserMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  passwordHash?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
@@ -483,6 +505,7 @@ export type UserCreateWithoutAccountsInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -497,6 +520,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -527,6 +551,7 @@ export type UserUpdateWithoutAccountsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -541,6 +566,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -555,6 +581,7 @@ export type UserCreateWithoutCategoriesInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -569,6 +596,7 @@ export type UserUncheckedCreateWithoutCategoriesInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -599,6 +627,7 @@ export type UserUpdateWithoutCategoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -613,6 +642,7 @@ export type UserUncheckedUpdateWithoutCategoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -627,6 +657,7 @@ export type UserCreateWithoutBudgetsInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -641,6 +672,7 @@ export type UserUncheckedCreateWithoutBudgetsInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -671,6 +703,7 @@ export type UserUpdateWithoutBudgetsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -685,6 +718,7 @@ export type UserUncheckedUpdateWithoutBudgetsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -699,6 +733,7 @@ export type UserCreateWithoutTransactionsInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -713,6 +748,7 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   id?: string
   email: string
   name?: string | null
+  passwordHash?: string | null
   currency?: string
   locale?: string
   timezone?: string
@@ -743,6 +779,7 @@ export type UserUpdateWithoutTransactionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -757,6 +794,7 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -829,6 +867,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   id?: boolean
   email?: boolean
   name?: boolean
+  passwordHash?: boolean
   currency?: boolean
   locale?: boolean
   timezone?: boolean
@@ -847,6 +886,7 @@ export type UserSelectScalar = {
   id?: boolean
   email?: boolean
   name?: boolean
+  passwordHash?: boolean
   currency?: boolean
   locale?: boolean
   timezone?: boolean
@@ -854,7 +894,7 @@ export type UserSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "currency" | "locale" | "timezone" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "passwordHash" | "currency" | "locale" | "timezone" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
@@ -875,6 +915,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     id: string
     email: string
     name: string | null
+    passwordHash: string | null
     currency: string
     locale: string
     timezone: string
@@ -1256,6 +1297,7 @@ export interface UserFieldRefs {
   readonly id: Prisma.FieldRef<"User", 'String'>
   readonly email: Prisma.FieldRef<"User", 'String'>
   readonly name: Prisma.FieldRef<"User", 'String'>
+  readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly currency: Prisma.FieldRef<"User", 'String'>
   readonly locale: Prisma.FieldRef<"User", 'String'>
   readonly timezone: Prisma.FieldRef<"User", 'String'>

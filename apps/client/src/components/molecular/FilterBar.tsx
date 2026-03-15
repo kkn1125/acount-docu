@@ -41,6 +41,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
         exclusive
         onChange={(_, v: TransactionTypeFilter | null) => v && onTypeChange(v)}
         size="small"
+        sx={{
+          bgcolor: 'action.hover',
+          borderRadius: 2,
+          p: 0.5,
+          '& .MuiToggleButtonGroup-grouped': { border: 0 },
+          '& .MuiToggleButton-root': {
+            borderRadius: 1.5,
+            textTransform: 'none',
+            '&.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1 },
+          },
+        }}
       >
         <ToggleButton value="all">전체</ToggleButton>
         <ToggleButton value="income">수입</ToggleButton>

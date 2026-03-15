@@ -2,16 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../db/prismaClient";
 import { AccountType, TransactionType } from "../generated/prisma/client";
 
-const DEMO_EMAIL = "demo@local";
 const router = Router();
-
-async function getDemoUserId(): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_EMAIL },
-    select: { id: true },
-  });
-  return user?.id ?? null;
-}
 
 function toAccountPayload(a: {
   id: string;
@@ -47,10 +38,7 @@ function toAccountPayload(a: {
 /** GET /?include=calculatedBalance — 계정 목록. include=calculatedBalance 시 계산 잔액·차이 포함 */
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const includeCalculated = String(req.query.include ?? "").toLowerCase() === "calculatedbalance";
 
@@ -128,10 +116,7 @@ router.get("/", async (req: Request, res: Response) => {
 /** POST / — 계정 생성. body: { name, type, sortOrder?, balance?, initialBalanceDate?, initialBalance? } */
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { name, type, sortOrder, balance, initialBalanceDate, initialBalance } = req.body;
     const trimmedName = typeof name === "string" ? name.trim() : "";
@@ -196,10 +181,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 /** PATCH /:id — 잔액만 수정 (기존 호환) */
 async function handleUpdateAccountBalance(req: Request, res: Response) {
-  const userId = await getDemoUserId();
-  if (!userId) {
-    return res.status(404).json({ error: "Demo user not found" });
-  }
+  const userId = req.userId!;
 
   const id = req.params.id as string;
   if (!id || id.trim() === "") {
@@ -234,10 +216,7 @@ async function handleUpdateAccountBalance(req: Request, res: Response) {
 /** PUT /:id — 계정 전체 수정 (name, type, sortOrder, balance, initialBalanceDate, initialBalance) */
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const id = (req.params.id as string)?.trim();
     if (!id) {
@@ -332,10 +311,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
 /** DELETE /:id — 계정 삭제. 거래가 있으면 409 */
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const id = (req.params.id as string)?.trim();
     if (!id) {

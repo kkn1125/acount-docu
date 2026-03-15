@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../common/config/apiConfig'
+import { authorizedFetch } from '../../common/utils/authorizedFetch'
 
 export interface BudgetItem {
   id: string
@@ -30,7 +31,7 @@ export const getBudgets = async (
   url.searchParams.set('year', String(params.year))
   url.searchParams.set('month', String(params.month))
 
-  const res = await fetch(url.toString())
+  const res = await authorizedFetch(url.toString())
   if (!res.ok) {
     throw new Error('예산 목록을 불러오지 못했습니다.')
   }
@@ -52,7 +53,7 @@ export const getBudgets = async (
 export const putBudget = async (
   body: PutBudgetRequest,
 ): Promise<BudgetItem> => {
-  const res = await fetch(`${API_BASE_URL}/api/budgets`, {
+  const res = await authorizedFetch(`${API_BASE_URL}/api/budgets`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

@@ -25,7 +25,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="subtitle1" fontWeight={600}>
+        <Typography variant="subtitle1" fontWeight={600} color="text.primary">
           최근 거래
         </Typography>
         {onShowFullList && (

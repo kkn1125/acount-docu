@@ -2,24 +2,12 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../db/prismaClient";
 import { Transaction, TransactionType } from "../generated/prisma/client";
 
-const DEMO_EMAIL = "demo@local";
 const router = Router();
-
-async function getDemoUserId(): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_EMAIL },
-    select: { id: true },
-  });
-  return user?.id ?? null;
-}
 
 /** GET /api/summary/monthly?year=YYYY&month=M */
 router.get("/monthly", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const year = Number(req.query.year);
     const month = Number(req.query.month);

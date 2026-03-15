@@ -133,67 +133,140 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
         anchor="bottom"
         open={open}
         onClose={handleClose}
+        slotProps={{
+          backdrop: { sx: { bgcolor: 'rgba(0,0,0,0.6)' } },
+        }}
         PaperProps={{
           sx: {
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            maxHeight: '90vh',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            maxHeight: '92dvh',
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderBottom: 'none',
+          },
+        }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            transition: 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
           },
         }}
       >
-        <Box sx={{ px: 2, pt: 1, pb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1 }}>
-            <Typography variant="h6">
-              {type === 'expense' ? '지출 추가' : '수입 추가'}
-            </Typography>
-            <IconButton onClick={handleClose} aria-label="닫기" size="small">
+        <Box sx={{ px: 2, pt: 1, pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 1,
+              position: 'relative',
+            }}
+          >
+            <Box
+              sx={{
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                bgcolor: 'action.hover',
+              }}
+              aria-hidden
+            />
+            <IconButton
+              onClick={handleClose}
+              aria-label="닫기"
+              size="small"
+              sx={{
+                position: 'absolute',
+                right: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'text.secondary',
+              }}
+            >
               <CloseIcon />
             </IconButton>
           </Box>
 
-          <Stack spacing={2.5}>
-            {loadFailed && (
-              <Alert severity="warning" action={<Button size="small" onClick={handleRetryLoad}>다시 시도</Button>}>
-                {categoryError && accountError ? '카테고리·계정을 불러오지 못했습니다.' : categoryError ? '카테고리를 불러오지 못했습니다.' : '계정을 불러오지 못했습니다.'}
-              </Alert>
-            )}
-            <TextField
-              label="금액"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
-              placeholder="0"
-              fullWidth
-              autoFocus
-              inputMode="numeric"
-              InputProps={{
-                endAdornment: <Box component="span" sx={{ ml: 1, color: 'text.secondary' }}>원</Box>,
-              }}
-              inputProps={{
-                inputMode: 'numeric',
-                pattern: '[0-9]*',
-              }}
-              size="medium"
-              sx={{ '& .MuiInputBase-input': { fontVariantNumeric: 'tabular-nums', fontSize: 24 } }}
-            />
-
+          <Stack spacing={3}>
             <Box>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                유형
-              </Typography>
               <ToggleButtonGroup
                 value={type}
                 exclusive
                 onChange={(_, v) => v != null && setType(v as TransactionType)}
                 fullWidth
                 size="small"
+                sx={{
+                  bgcolor: 'action.hover',
+                  borderRadius: 12,
+                  p: 0.5,
+                  '& .MuiToggleButtonGroup-grouped': { border: 0 },
+                  '& .MuiToggleButton-root': {
+                    py: 1,
+                    borderRadius: 10,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    '&.Mui-selected': {
+                      bgcolor: 'background.paper',
+                      color: 'primary.main',
+                      boxShadow: 1,
+                      '&:hover': { bgcolor: 'background.paper' },
+                    },
+                  },
+                }}
               >
                 <ToggleButton value="expense">지출</ToggleButton>
                 <ToggleButton value="income">수입</ToggleButton>
               </ToggleButtonGroup>
             </Box>
 
+            {loadFailed && (
+              <Alert
+                severity="warning"
+                action={<Button size="small" onClick={handleRetryLoad}>다시 시도</Button>}
+                sx={{ borderRadius: 2 }}
+              >
+                {categoryError && accountError
+                  ? '카테고리·계정을 불러오지 못했습니다.'
+                  : categoryError
+                    ? '카테고리를 불러오지 못했습니다.'
+                    : '계정을 불러오지 못했습니다.'}
+              </Alert>
+            )}
+
+            <Box sx={{ textAlign: 'center', py: 1 }}>
+              <TextField
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+                placeholder="0"
+                fullWidth
+                autoFocus
+                inputMode="numeric"
+                variant="standard"
+                InputProps={{
+                  disableUnderline: true,
+                  sx: {
+                    fontSize: { xs: 32, sm: 40 },
+                    fontWeight: 700,
+                    fontVariantNumeric: 'tabular-nums',
+                    textAlign: 'center',
+                    color: type === 'expense' ? 'expense.main' : 'income.main',
+                  },
+                }}
+                inputProps={{
+                  inputMode: 'numeric',
+                  pattern: '[0-9]*',
+                  maxLength: 12,
+                }}
+                sx={{ '& .MuiInputBase-input': { py: 0 } }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                원
+              </Typography>
+            </Box>
+
             <Box>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
                 카테고리
               </Typography>
               <Grid container spacing={1}>
@@ -204,7 +277,18 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
                       size="small"
                       fullWidth
                       onClick={() => setCategoryId(c.id)}
-                      sx={{ py: 1.5 }}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        borderColor: 'divider',
+                        ...(categoryId === c.id && {
+                          bgcolor: type === 'expense' ? 'expense.main' : 'income.main',
+                          color: '#fff',
+                          '&:hover': { bgcolor: type === 'expense' ? 'expense.main' : 'income.main', opacity: 0.9 },
+                        }),
+                      }}
                     >
                       {c.name}
                     </Button>
@@ -213,7 +297,7 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
               </Grid>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
               <TextField
                 label="날짜"
                 type="date"
@@ -221,7 +305,7 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
                 onChange={(e) => setDate(e.target.value)}
                 size="small"
                 InputLabelProps={{ shrink: true }}
-                sx={{ minWidth: 140 }}
+                sx={{ minWidth: 140, flex: 1 }}
               />
               <TextField
                 select
@@ -229,7 +313,7 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
                 value={accountId}
                 onChange={(e) => setLastAccountId(e.target.value)}
                 size="small"
-                sx={{ minWidth: 120 }}
+                sx={{ minWidth: 140, flex: 1 }}
                 disabled={accountList.length === 0}
               >
                 {accountList.map((a) => (
@@ -238,7 +322,7 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
                   </MenuItem>
                 ))}
               </TextField>
-            </Box>
+            </Stack>
 
             <FormControlLabel
               control={
@@ -246,9 +330,14 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
                   checked={isFixed}
                   onChange={(e) => setIsFixed(e.target.checked)}
                   size="small"
+                  sx={{ color: 'text.secondary' }}
                 />
               }
-              label="고정비 / 정기 거래"
+              label={
+                <Typography variant="body2" color="text.secondary">
+                  고정비 / 정기 거래
+                </Typography>
+              }
             />
 
             <Button
@@ -257,7 +346,12 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
               fullWidth
               onClick={handleSave}
               disabled={!canSave}
-              sx={{ py: 1.5, mt: 1 }}
+              sx={{
+                py: 1.75,
+                borderRadius: 2,
+                fontWeight: 600,
+                fontSize: '1rem',
+              }}
             >
               저장
             </Button>
@@ -271,6 +365,7 @@ const QuickAddSheet: React.FC<QuickAddSheetProps> = ({ open, onClose }) => {
         onClose={() => setSnackOpen(false)}
         message={snackMessage}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        ContentProps={{ sx: { borderRadius: 2 } }}
       />
     </>
   )

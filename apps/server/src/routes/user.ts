@@ -1,15 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../db/prismaClient";
 
-const DEMO_EMAIL = "demo@local";
 const router = Router();
-
-async function getDemoUser() {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_EMAIL },
-  });
-  return user;
-}
 
 function toUserPayload(user: {
   id: string;
@@ -29,12 +21,15 @@ function toUserPayload(user: {
   };
 }
 
-/** GET /api/user — 현재 데모 유저 정보 반환 */
+/** GET /api/user — 현재 로그인 유저 정보 반환 */
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const user = await getDemoUser();
+    const userId = req.userId!;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
     if (!user) {
-      return res.status(404).json({ error: "Demo user not found" });
+      return res.status(404).json({ error: "User not found" });
     }
     return res.json(toUserPayload(user));
   } catch (e) {
@@ -46,10 +41,7 @@ router.get("/", async (req: Request, res: Response) => {
 /** PATCH /api/user — name, currency, locale, timezone 수정 */
 router.patch("/", async (req: Request, res: Response) => {
   try {
-    const user = await getDemoUser();
-    if (!user) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { name, currency, locale, timezone } = req.body as {
       name?: string | null;
@@ -79,12 +71,8 @@ router.patch("/", async (req: Request, res: Response) => {
       data.timezone = String(timezone);
     }
 
-    if (Object.keys(data).length === 0) {
-      return res.json(toUserPayload(user));
-    }
-
     const updated = await prisma.user.update({
-      where: { id: user.id },
+      where: { id: userId },
       data,
     });
 

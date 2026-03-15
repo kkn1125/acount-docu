@@ -32,6 +32,7 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String?
+  passwordHash String? @map("password_hash")
   currency  String   @default("KRW")
   locale    String   @default("ko-KR")
   timezone  String   @default("Asia/Seoul")
@@ -109,7 +110,7 @@ model Transaction {
   userId      String          @map("user_id")
   account     Account         @relation(fields: [accountId], references: [id])
   accountId   String          @map("account_id")
-  category    Category        @relation(fields: [categoryId], references: [id])
+  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId  String          @map("category_id")
   type        TransactionType
   amount      Decimal

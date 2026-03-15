@@ -2,24 +2,12 @@ import { Router, Request, Response } from "express";
 import { TransactionType } from "../generated/prisma/client";
 import { prisma } from "../db/prismaClient";
 
-const DEMO_EMAIL = "demo@local";
 const router = Router();
-
-async function getDemoUserId(): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_EMAIL },
-    select: { id: true },
-  });
-  return user?.id ?? null;
-}
 
 /** GET /?type=INCOME|EXPENSE (optional). Returns categories for demo user. */
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const type = req.query.type as string | undefined;
     const where: { userId: string; type?: TransactionType } = { userId };
@@ -42,10 +30,7 @@ router.get("/", async (req: Request, res: Response) => {
 /** POST / body: { name: string, type: 'INCOME'|'EXPENSE' }. Create category for demo user. */
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { name, type } = req.body as { name?: string; type?: string };
     if (typeof name !== "string" || !name.trim()) {
@@ -77,10 +62,7 @@ router.post("/", async (req: Request, res: Response) => {
 /** PUT /:id body: { name?: string }. Update category; must be owned by demo user. */
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { id } = req.params as { id: string };
     if (!id) {
@@ -121,13 +103,10 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
-/** DELETE /:id. Delete category; 409 if used by any transaction or budget. */
+/** DELETE /:id. Body optional: { replacementCategoryId?: string }. Delete category; 409 if in use and no replacement. With replacement: reassign transactions/budgets then delete. */
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { id } = req.params as { id: string };
     if (!id) {
@@ -143,6 +122,39 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Category not found" });
     }
 
+    const body = (req.body || {}) as { replacementCategoryId?: string };
+    const replacementCategoryId =
+      typeof body.replacementCategoryId === "string" ? body.replacementCategoryId.trim() : undefined;
+
+    if (replacementCategoryId) {
+      if (replacementCategoryId === id) {
+        return res.status(400).json({ error: "대체 카테고리는 삭제 대상과 같을 수 없습니다." });
+      }
+      const replacement = await prisma.category.findUnique({
+        where: { id: replacementCategoryId },
+        select: { userId: true },
+      });
+      if (!replacement || replacement.userId !== userId) {
+        return res.status(400).json({ error: "대체 카테고리를 찾을 수 없거나 본인 소유가 아닙니다." });
+      }
+
+      await prisma.$transaction(async (tx) => {
+        await tx.transaction.updateMany({
+          where: { categoryId: id },
+          data: { categoryId: replacementCategoryId },
+        });
+        await tx.budget.updateMany({
+          where: { categoryId: id },
+          data: { categoryId: replacementCategoryId },
+        });
+        await tx.category.delete({
+          where: { id },
+        });
+      });
+
+      return res.status(204).send();
+    }
+
     const [txCount, budgetCount] = await Promise.all([
       prisma.transaction.count({ where: { categoryId: id } }),
       prisma.budget.count({ where: { categoryId: id } }),
@@ -152,6 +164,8 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(409).json({
         error: "사용 중인 카테고리입니다",
         message: "거래 또는 예산에서 사용 중인 카테고리는 삭제할 수 없습니다.",
+        transactionCount: txCount,
+        budgetCount,
       });
     }
 

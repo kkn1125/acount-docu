@@ -201,9 +201,9 @@ const AccountsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 0 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h5" component="h1">
+        <Typography variant="h5" component="h1" color="text.primary">
           자산
         </Typography>
         <Button
@@ -223,25 +223,35 @@ const AccountsPage: React.FC = () => {
         </Alert>
       )}
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2,
+          mb: 2,
+          borderRadius: 2,
+          bgcolor: 'background.paper',
+          borderLeft: 4,
+          borderLeftColor: 'primary.main',
+        }}
+      >
+        <Typography variant="caption" color="text.secondary">
           총 자산 (입력 잔액)
         </Typography>
-        <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums', color: 'text.primary' }}>
           ₩{totalInput.toLocaleString()}
         </Typography>
         {totalCalculated != null && (
           <>
-            <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.5, display: 'block' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
               총 자산 (거래 기준 계산)
             </Typography>
-            <Typography variant="body1" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            <Typography variant="body1" sx={{ fontVariantNumeric: 'tabular-nums', color: 'text.primary' }}>
               ₩{totalCalculated.toLocaleString()}
             </Typography>
           </>
         )}
         {hasMismatch && (
-          <Typography variant="caption" sx={{ color: 'warning.light', mt: 0.5, display: 'block' }}>
+          <Typography variant="caption" color="warning.main" sx={{ mt: 0.5, display: 'block' }}>
             일부 계정에서 입력 잔액과 계산 잔액이 다릅니다.
           </Typography>
         )}
@@ -250,7 +260,7 @@ const AccountsPage: React.FC = () => {
       {loading ? (
         <Typography color="text.secondary">불러오는 중…</Typography>
       ) : (
-        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, bgcolor: 'background.paper' }}>
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>

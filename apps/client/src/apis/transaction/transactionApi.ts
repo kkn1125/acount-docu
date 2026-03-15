@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../common/config/apiConfig';
+import { authorizedFetch } from '../../common/utils/authorizedFetch';
 import type { TransactionItem, TransactionType } from '../../types/transaction';
 
 export interface GetTransactionListParams {
@@ -31,13 +32,64 @@ export interface UpdateTransactionRequest
 
 export type UpdateTransactionResponse = TransactionItem;
 
+export interface UploadTransactionsFromExcelResponse {
+  created: number;
+  skipped?: number;
+  transactions: TransactionItem[];
+}
+
+export const uploadTransactionsFromExcel = async (
+  file: File,
+  accountId: string,
+  expenseCategoryId: string,
+  incomeCategoryId: string,
+): Promise<UploadTransactionsFromExcelResponse> => {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('accountId', accountId);
+  form.append('expenseCategoryId', expenseCategoryId);
+  form.append('incomeCategoryId', incomeCategoryId);
+
+  const res = await authorizedFetch(`${API_BASE_URL}/api/transactions/upload`, {
+    method: 'POST',
+    body: form,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      (err as { error?: string }).error ?? '엑셀 업로드에 실패했습니다.',
+    );
+  }
+
+  const data = await res.json();
+  return {
+    created: data.created,
+    skipped: data.skipped,
+    transactions: (data.transactions ?? []).map((item: any) => ({
+      id: item.id,
+      type: mapServerTransactionType(item.type),
+      amount: Number(item.amount),
+      date: item.date,
+      scheduledAt: item.scheduledAt ?? undefined,
+      isFixed: Boolean(item.isFixed),
+      categoryId: item.categoryId,
+      categoryName: item.category?.name ?? undefined,
+      accountId: item.accountId,
+      accountName: item.account?.name ?? undefined,
+      memo: item.memo ?? undefined,
+      labelIds: Array.isArray(item.labels) ? item.labels : [],
+    })),
+  };
+};
+
 export const getTransactionList = async (
   params: GetTransactionListParams,
 ): Promise<GetTransactionListResponse> => {
   const url = new URL('/api/transactions', API_BASE_URL);
   url.searchParams.set('month', params.month);
 
-  const res = await fetch(url.toString());
+  const res = await authorizedFetch(url.toString());
   if (!res.ok) {
     throw new Error('거래 목록을 불러오지 못했습니다.');
   }
@@ -67,7 +119,7 @@ export const createTransaction = async (
     ...body,
     type: toServerTransactionType(body.type),
   };
-  const res = await fetch(`${API_BASE_URL}/api/transactions`, {
+  const res = await authorizedFetch(`${API_BASE_URL}/api/transactions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -105,7 +157,7 @@ export const updateTransaction = async (
     body.type != null
       ? { ...body, type: toServerTransactionType(body.type) }
       : body;
-  const res = await fetch(`${API_BASE_URL}/api/transactions/${id}`, {
+  const res = await authorizedFetch(`${API_BASE_URL}/api/transactions/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -136,7 +188,7 @@ export const updateTransaction = async (
 };
 
 export const deleteTransaction = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/api/transactions/${id}`, {
+  const res = await authorizedFetch(`${API_BASE_URL}/api/transactions/${id}`, {
     method: 'DELETE',
   });
 

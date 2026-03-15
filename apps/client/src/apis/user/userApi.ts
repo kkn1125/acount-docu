@@ -1,11 +1,9 @@
-import { API_BASE_URL } from '../../common/config/apiConfig'
+import { apiBase, authorizedFetch } from '../../common/utils/authorizedFetch'
 import type { UserProfile } from '../../types/user'
-
-const base = (API_BASE_URL ?? '').replace(/\/$/, '')
 
 /** GET /api/user — 현재 사용자 프로필 조회 */
 export const getUserProfile = async (): Promise<UserProfile> => {
-  const res = await fetch(`${base}/api/user`)
+  const res = await authorizedFetch('/api/user')
   if (!res.ok) {
     const msg = await res.json().catch(() => ({}))
     throw new Error(
@@ -27,7 +25,7 @@ export const getUserProfile = async (): Promise<UserProfile> => {
 export const updateUserProfile = async (
   payload: Partial<Pick<UserProfile, 'name' | 'currency' | 'locale' | 'timezone'>>,
 ): Promise<UserProfile> => {
-  const res = await fetch(`${base}/api/user`, {
+  const res = await authorizedFetch(`${apiBase}/api/user`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

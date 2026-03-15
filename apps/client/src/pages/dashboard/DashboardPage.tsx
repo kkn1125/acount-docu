@@ -64,7 +64,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
   const categoryBreakdown = summary?.categoryBreakdown ?? []
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 0 }}>
       <MonthNavigator
         monthKey={selectedMonth}
         onPrev={prevMonth}
@@ -79,24 +79,25 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
       <Paper
         variant="outlined"
         sx={{
-          py: 1.5,
+          py: 2,
           px: 2,
-          mb: 2,
+          mb: 3,
           borderRadius: 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          bgcolor: 'background.paper',
         }}
       >
         <Typography variant="body2" color="text.secondary">
           총 자산 (수중 자금)
         </Typography>
-        <Typography variant="body1" fontWeight={600} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        <Typography variant="body1" fontWeight={600} sx={{ fontVariantNumeric: 'tabular-nums', color: 'text.primary' }}>
           ₩{totalAssets.toLocaleString()}
         </Typography>
       </Paper>
 
-      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5, color: 'text.primary' }}>
         카테고리별 예산
       </Typography>
       <Box sx={{ mb: 3 }}>
@@ -118,7 +119,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
         )}
       </Box>
 
-      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5, color: 'text.primary' }}>
         최근 거래
       </Typography>
       {hasNoTransactions ? (

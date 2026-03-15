@@ -12,6 +12,8 @@ interface UserState {
 interface UserAction {
   fetchUser: () => Promise<void>
   saveUser: (patch: Partial<Pick<UserProfile, 'name' | 'currency' | 'locale' | 'timezone'>>) => Promise<void>
+  setProfile: (profile: UserProfile | null) => void
+  clearProfile: () => void
 }
 
 export type UserStore = UserState & UserAction
@@ -24,7 +26,7 @@ const initialState: UserState = {
 
 export const useUserStore = create<UserStore>()(
   devtools(
-    (set, get) => ({
+    (set) => ({
       ...initialState,
       fetchUser: async () => {
         set({ isLoading: true, error: null })
@@ -53,6 +55,12 @@ export const useUserStore = create<UserStore>()(
         } finally {
           set({ isLoading: false })
         }
+      },
+      setProfile: (profile) => {
+        set({ profile })
+      },
+      clearProfile: () => {
+        set({ profile: null, error: null })
       },
     }),
     { name: 'userStore' },

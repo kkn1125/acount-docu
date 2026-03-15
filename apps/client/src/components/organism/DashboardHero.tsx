@@ -26,14 +26,14 @@ const DashboardHero: React.FC<DashboardHeroProps> = () => {
         sx={{
           p: 3,
           borderRadius: 2,
-          borderColor: 'error.light',
-          bgcolor: 'error.50',
+          borderColor: 'budgetDanger.main',
+          bgcolor: 'background.paper',
         }}
       >
-        <Typography color="error.main" sx={{ mb: 1 }}>
+        <Typography color="budgetDanger.main" sx={{ mb: 1 }}>
           {error}
         </Typography>
-        <Button size="small" variant="outlined" color="error" onClick={handleRetry}>
+        <Button size="small" variant="outlined" onClick={handleRetry} sx={{ borderColor: 'budgetDanger.main', color: 'budgetDanger.main' }}>
           다시 시도
         </Button>
       </Paper>
@@ -42,7 +42,7 @@ const DashboardHero: React.FC<DashboardHeroProps> = () => {
 
   if (isLoading && !summary) {
     return (
-      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, bgcolor: 'background.paper' }}>
         <Skeleton variant="text" width="60%" height={40} sx={{ mb: 1 }} />
         <Skeleton variant="text" width="80%" height={24} />
         <Skeleton variant="text" width="70%" height={24} />
@@ -57,8 +57,8 @@ const DashboardHero: React.FC<DashboardHeroProps> = () => {
         p: 3,
         borderRadius: 2,
         borderLeft: 4,
-        borderLeftColor: isSafe ? 'success.main' : 'error.main',
-        bgcolor: isSafe ? 'success.50' : 'error.50',
+        borderLeftColor: isSafe ? 'budgetSafe.main' : 'budgetDanger.main',
+        bgcolor: 'background.paper',
       }}
     >
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
@@ -76,13 +76,13 @@ const DashboardHero: React.FC<DashboardHeroProps> = () => {
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <Typography variant="body2" color="text.secondary">
           오늘 지출:{' '}
-          <Box component="span" sx={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+          <Box component="span" sx={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'text.primary' }}>
             {(summary?.todayExpense ?? 0).toLocaleString()}원
           </Box>
         </Typography>
         <Typography variant="body2" color="text.secondary">
           이번 달 지출:{' '}
-          <Box component="span" sx={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+          <Box component="span" sx={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'text.primary' }}>
             {(summary?.totalExpense ?? 0).toLocaleString()}원
           </Box>
         </Typography>

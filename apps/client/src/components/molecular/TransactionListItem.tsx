@@ -7,28 +7,18 @@ import {
   Box,
   IconButton,
 } from '@mui/material'
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  TrendingDown as ExpenseIcon,
+  TrendingUp as IncomeIcon,
+  SwapHoriz as TransferIcon,
+} from '@mui/icons-material'
 import type { TransactionItem } from '../../types/transaction'
 import type { CategoryItem } from '../../types/category'
 import AmountText from '../atom/AmountText'
 import { useCategoryStore } from '../../stores/categoryStore'
 import { useAccountStore } from '../../stores/accountStore'
-
-const CATEGORY_PALETTE = [
-  '#ff9800',
-  '#4caf50',
-  '#2196f3',
-  '#9c27b0',
-  '#00bcd4',
-  '#f44336',
-  '#607d8b',
-  '#795548',
-]
-
-function getCategoryColor(categoryId: string, list: CategoryItem[]): string {
-  const idx = list.findIndex((c) => c.id === categoryId)
-  return CATEGORY_PALETTE[idx >= 0 ? idx % CATEGORY_PALETTE.length : 0]
-}
 
 function getCategoryName(transaction: TransactionItem, list: CategoryItem[]): string {
   if (transaction.categoryName) return transaction.categoryName
@@ -58,8 +48,9 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({
   const isExpense = transaction.type === 'expense'
   const isIncome = transaction.type === 'income'
   const categoryName = getCategoryName(transaction, categoryList)
-  const categoryColor = getCategoryColor(transaction.categoryId, categoryList)
   const accountName = getAccountName(transaction, accountList)
+  const TypeIcon = isIncome ? IncomeIcon : isExpense ? ExpenseIcon : TransferIcon
+  const typeLabel = isIncome ? '수입' : isExpense ? '지출' : '이체'
 
   const handleDelete = () => {
     if (onDelete && window.confirm('이 거래를 삭제할까요?')) {
@@ -73,8 +64,7 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({
       sx={{
         borderRadius: 2,
         mb: 1,
-        borderLeft: 3,
-        borderLeftColor: categoryColor,
+        bgcolor: 'background.paper',
         '&:hover .transaction-actions': { opacity: 1 },
       }}
     >
@@ -88,7 +78,7 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
           <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="body1">
+            <Typography variant="body1" color="text.primary">
               {categoryName}
             </Typography>
             {transaction.memo && (
@@ -107,10 +97,16 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({
           </Stack>
           <Stack direction="row" alignItems="center" spacing={0}>
             <Stack alignItems="flex-end" spacing={0.5} sx={{ mr: 0.5 }}>
-              <AmountText color={isIncome ? 'income' : isExpense ? 'expense' : 'default'}>
-                {isExpense ? '-' : isIncome ? '+' : ''}
-                {transaction.amount.toLocaleString()}
-              </AmountText>
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <TypeIcon sx={{ fontSize: 16, color: 'text.secondary' }} aria-hidden />
+                <Typography variant="caption" color="text.secondary" component="span">
+                  {typeLabel}
+                </Typography>
+                <AmountText color="default">
+                  {isExpense ? '-' : isIncome ? '+' : ''}
+                  {transaction.amount.toLocaleString()}
+                </AmountText>
+              </Stack>
               <Typography variant="caption" color="text.secondary">
                 {accountName}
               </Typography>

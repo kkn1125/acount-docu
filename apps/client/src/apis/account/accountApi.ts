@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../common/config/apiConfig'
+import { authorizedFetch } from '../../common/utils/authorizedFetch'
 import type { AccountItem, AccountType, AccountWithCalculatedBalance } from '../../types/account'
 
 const base = (API_BASE_URL ?? '').replace(/\/$/, '')
@@ -34,7 +35,7 @@ function toAccountItem(raw: AccountRaw): AccountItem {
 /** GET /api/accounts — 데모 사용자 계정 목록 (잔액·기준일 포함) */
 export const getAccountList = async (): Promise<AccountItem[]> => {
   const url = new URL('/api/accounts', API_BASE_URL)
-  const res = await fetch(url.toString())
+  const res = await authorizedFetch(url.toString())
   if (!res.ok) {
     throw new Error('계정 목록을 불러오지 못했습니다.')
   }
@@ -48,7 +49,7 @@ export const getAccountList = async (): Promise<AccountItem[]> => {
 export const getAccountListWithBalances = async (): Promise<AccountWithCalculatedBalance[]> => {
   const url = new URL('/api/accounts', API_BASE_URL)
   url.searchParams.set('include', 'calculatedBalance')
-  const res = await fetch(url.toString())
+  const res = await authorizedFetch(url.toString())
   if (!res.ok) {
     throw new Error('계정 목록을 불러오지 못했습니다.')
   }
@@ -74,7 +75,7 @@ export const createAccount = async (body: {
   initialBalanceDate?: string | null
   initialBalance?: number | null
 }): Promise<AccountItem> => {
-  const res = await fetch(`${base}/api/accounts`, {
+  const res = await authorizedFetch(`${base}/api/accounts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -99,7 +100,7 @@ export const updateAccount = async (
     initialBalance: number | null
   }>,
 ): Promise<AccountItem> => {
-  const res = await fetch(`${base}/api/accounts/${encodeURIComponent(id)}`, {
+  const res = await authorizedFetch(`${base}/api/accounts/${encodeURIComponent(id)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -117,7 +118,7 @@ export const updateAccountBalance = async (
   id: string,
   balance: number,
 ): Promise<AccountItem> => {
-  const res = await fetch(`${base}/api/accounts/${encodeURIComponent(id)}`, {
+  const res = await authorizedFetch(`${base}/api/accounts/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ balance }),
@@ -134,7 +135,7 @@ export const updateAccountBalance = async (
 
 /** DELETE /api/accounts/:id — 계정 삭제 (거래 있으면 409) */
 export const deleteAccount = async (id: string): Promise<void> => {
-  const res = await fetch(`${base}/api/accounts/${encodeURIComponent(id)}`, {
+  const res = await authorizedFetch(`${base}/api/accounts/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
   if (res.status === 409) {

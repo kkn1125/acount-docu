@@ -1,24 +1,12 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../db/prismaClient";
 
-const DEMO_EMAIL = "demo@local";
 const router = Router();
-
-async function getDemoUserId(): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_EMAIL },
-    select: { id: true },
-  });
-  return user?.id ?? null;
-}
 
 /** GET /api/budgets?year=YYYY&month=M - list budgets for the month */
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const year = Number(req.query.year);
     const month = Number(req.query.month);
@@ -53,10 +41,7 @@ router.get("/", async (req: Request, res: Response) => {
 /** PUT /api/budgets - upsert one budget. body: { categoryId, year, month, amount, alertAt? } */
 router.put("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { categoryId, year, month, amount, alertAt } = req.body;
 

@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../common/config/apiConfig'
+import { authorizedFetch } from '../../common/utils/authorizedFetch'
 import type { CategoryItem } from '../../types/category'
 
 export interface GetCategoryListParams {
@@ -26,7 +27,7 @@ export const getCategoryList = async (
   if (params?.type) {
     url.searchParams.set('type', params.type.toUpperCase())
   }
-  const res = await fetch(url.toString())
+  const res = await authorizedFetch(url.toString())
   if (!res.ok) {
     throw new Error('카테고리 목록을 불러오지 못했습니다.')
   }
@@ -42,7 +43,7 @@ export interface CreateCategoryRequest {
 export const createCategory = async (
   body: CreateCategoryRequest,
 ): Promise<CategoryItem> => {
-  const res = await fetch(`${API_BASE_URL}/api/categories`, {
+  const res = await authorizedFetch(`${API_BASE_URL}/api/categories`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -66,7 +67,7 @@ export const updateCategory = async (
   id: string,
   body: UpdateCategoryRequest,
 ): Promise<CategoryItem> => {
-  const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
+  const res = await authorizedFetch(`${API_BASE_URL}/api/categories/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -79,16 +80,40 @@ export const updateCategory = async (
   return toCategoryItem(item)
 }
 
-export const deleteCategory = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
+export interface DeleteCategoryOptions {
+  replacementCategoryId?: string
+}
+
+export interface DeleteCategoryConflictError extends Error {
+  transactionCount?: number
+  budgetCount?: number
+}
+
+export const deleteCategory = async (
+  id: string,
+  options?: DeleteCategoryOptions,
+): Promise<void> => {
+  const body =
+    options?.replacementCategoryId != null
+      ? JSON.stringify({ replacementCategoryId: options.replacementCategoryId })
+      : undefined
+  const res = await authorizedFetch(`${API_BASE_URL}/api/categories/${id}`, {
     method: 'DELETE',
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body,
   })
   if (!res.ok) {
-    if (res.status === 409) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err?.error ?? '사용 중인 카테고리입니다.')
+    const err = await res.json().catch(() => ({})) as {
+      error?: string
+      transactionCount?: number
+      budgetCount?: number
     }
-    const err = await res.json().catch(() => ({}))
+    if (res.status === 409) {
+      const e = new Error(err?.error ?? '사용 중인 카테고리입니다.') as DeleteCategoryConflictError
+      e.transactionCount = err?.transactionCount
+      e.budgetCount = err?.budgetCount
+      throw e
+    }
     throw new Error(err?.error ?? '카테고리를 삭제하지 못했습니다.')
   }
 }

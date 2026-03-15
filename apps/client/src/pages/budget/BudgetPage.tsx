@@ -98,11 +98,11 @@ const BudgetPage: React.FC<BudgetPageProps> = () => {
   }
 
   return (
-    <Box sx={{ pt: 2 }}>
-      <Typography variant="h5" component="h1" gutterBottom>
+    <Box sx={{ pt: 0 }}>
+      <Typography variant="h5" component="h1" gutterBottom color="text.primary">
         예산
       </Typography>
-      <Typography color="text.secondary" sx={{ mb: 2 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         이번 달 예산 대비 카테고리별 사용 현황이에요. 예산 금액을 입력하면 자동으로 저장돼요.
       </Typography>
 
@@ -114,7 +114,7 @@ const BudgetPage: React.FC<BudgetPageProps> = () => {
         sx={{ mb: 2 }}
       />
 
-      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }} color="text.primary">
         카테고리별 예산 설정
       </Typography>
       <Box>

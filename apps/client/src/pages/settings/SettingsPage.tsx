@@ -29,6 +29,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory as deleteCategoryApi,
+  type DeleteCategoryConflictError,
 } from '../../apis/category/categoryApi'
 import { updateAccountBalance } from '../../apis/account/accountApi'
 
@@ -58,6 +59,13 @@ const SettingsPage: React.FC = () => {
   const [snackOpen, setSnackOpen] = useState(false)
   const [snackMessage, setSnackMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<CategoryItem | null>(null)
+  const [deleteConflict, setDeleteConflict] = useState<{
+    transactionCount: number
+    budgetCount: number
+  } | null>(null)
+  const [replacementCategoryId, setReplacementCategoryId] = useState<string>('')
   const [userDraft, setUserDraft] = useState({
     name: '',
     currency: 'KRW',
@@ -217,7 +225,47 @@ const SettingsPage: React.FC = () => {
       setSnackMessage('카테고리가 삭제되었습니다.')
       setSnackOpen(true)
     } catch (e) {
-      setSnackMessage(e instanceof Error ? e.message : '삭제에 실패했습니다.')
+      if (e instanceof Error && 'transactionCount' in e) {
+        const err = e as DeleteCategoryConflictError
+        setDeleteTarget(category)
+        setDeleteConflict({
+          transactionCount: err.transactionCount ?? 0,
+          budgetCount: err.budgetCount ?? 0,
+        })
+        const sameType = categoryList.filter(
+          (c) => c.type === category.type && c.id !== category.id,
+        )
+        setReplacementCategoryId(sameType[0]?.id ?? '')
+        setDeleteDialogOpen(true)
+      } else {
+        setSnackMessage(e instanceof Error ? e.message : '삭제에 실패했습니다.')
+        setSnackOpen(true)
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false)
+    setDeleteTarget(null)
+    setDeleteConflict(null)
+    setReplacementCategoryId('')
+  }
+
+  const handleDeleteWithReplacement = async () => {
+    if (!deleteTarget || !replacementCategoryId) return
+    setSubmitting(true)
+    try {
+      await deleteCategoryApi(deleteTarget.id, {
+        replacementCategoryId,
+      })
+      await fetchCategories()
+      handleCloseDeleteDialog()
+      setSnackMessage('카테고리가 삭제되었고, 거래·예산이 선택한 카테고리로 변경되었습니다.')
+      setSnackOpen(true)
+    } catch (e) {
+      setSnackMessage(e instanceof Error ? e.message : '변경 후 삭제에 실패했습니다.')
       setSnackOpen(true)
     } finally {
       setSubmitting(false)
@@ -228,13 +276,13 @@ const SettingsPage: React.FC = () => {
   const expenseCategories = categoryList.filter((c) => c.type === 'expense')
 
   return (
-    <Box sx={{ pt: 3, pb: 8 }}>
-      <Typography variant="h5" component="h1" gutterBottom>
+    <Box sx={{ pt: 0, pb: 8 }}>
+      <Typography variant="h5" component="h1" gutterBottom color="text.primary">
         설정
       </Typography>
 
       <Box sx={{ mt: 2, mb: 4 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
+        <Typography variant="h6" sx={{ mb: 1 }} color="text.primary">
           프로필
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -249,6 +297,7 @@ const SettingsPage: React.FC = () => {
             flexDirection: 'column',
             gap: 2,
             mb: 2,
+            bgcolor: 'background.paper',
           }}
         >
           <TextField
@@ -308,15 +357,25 @@ const SettingsPage: React.FC = () => {
       </Box>
 
       <Box sx={{ mt: 3, mb: 4 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
+        <Typography variant="h6" sx={{ mb: 1 }} color="text.primary">
           자산 (계정 잔액)
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
           보유 중인 계정별 현재 잔액을 기입하면 총 자산이 계산됩니다.
         </Typography>
-        <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-          <Typography variant="caption" sx={{ opacity: 0.9 }}>총 자산</Typography>
-          <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            mb: 2,
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+            borderLeft: 4,
+            borderLeftColor: 'primary.main',
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">총 자산</Typography>
+          <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums', color: 'text.primary' }}>
             ₩{totalAssets.toLocaleString()}
           </Typography>
         </Paper>
@@ -372,7 +431,7 @@ const SettingsPage: React.FC = () => {
 
       <Box sx={{ mt: 3 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-          <Typography variant="h6">카테고리 관리</Typography>
+          <Typography variant="h6" color="text.primary">카테고리 관리</Typography>
           <Button
             variant="contained"
             size="small"
@@ -383,7 +442,7 @@ const SettingsPage: React.FC = () => {
             추가
           </Button>
         </Stack>
-        <List dense sx={{ bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider' }}>
+        <List dense sx={{ bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
           <ListItem sx={{ bgcolor: 'action.hover' }}>
             <ListItemText primary="수입" secondary={`${incomeCategories.length}개`} />
           </ListItem>
@@ -516,6 +575,60 @@ const SettingsPage: React.FC = () => {
             disabled={!form.name.trim() || submitting}
           >
             저장
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>카테고리 사용 중</DialogTitle>
+        <DialogContent>
+          {deleteConflict && deleteTarget && (
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                이 카테고리를 사용하는 거래 {deleteConflict.transactionCount}건, 예산{' '}
+                {deleteConflict.budgetCount}건이 있습니다. 다른 카테고리로 모두 변경한 뒤 삭제할까요?
+              </Typography>
+              {categoryList.filter((c) => c.type === deleteTarget.type && c.id !== deleteTarget.id)
+                .length > 0 ? (
+                <TextField
+                  select
+                  label="대체 카테고리"
+                  value={replacementCategoryId}
+                  onChange={(e) => setReplacementCategoryId(e.target.value)}
+                  size="small"
+                  fullWidth
+                >
+                  {categoryList
+                    .filter((c) => c.type === deleteTarget.type && c.id !== deleteTarget.id)
+                    .map((c) => (
+                      <MenuItem key={c.id} value={c.id}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </TextField>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  같은 유형의 다른 카테고리가 없습니다. 카테고리를 추가한 뒤 다시 시도하세요.
+                </Typography>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseDeleteDialog}>취소</Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleDeleteWithReplacement}
+            disabled={
+              !replacementCategoryId ||
+              submitting ||
+              !categoryList.some(
+                (c) => c.type === deleteTarget?.type && c.id !== deleteTarget?.id,
+              )
+            }
+          >
+            변경 후 삭제
           </Button>
         </DialogActions>
       </Dialog>

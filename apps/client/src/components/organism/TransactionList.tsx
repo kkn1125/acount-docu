@@ -29,6 +29,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           border: '1px dashed',
           borderColor: 'divider',
           borderRadius: 2,
+          bgcolor: 'action.hover',
         }}
       >
         <Typography variant="body1" sx={{ mb: 0.5 }}>

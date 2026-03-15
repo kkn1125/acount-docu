@@ -1,25 +1,19 @@
 import { Router, Request, Response } from "express";
+import multer from "multer";
 import { TransactionType } from "../generated/prisma/client";
 import { prisma } from "../db/prismaClient";
+import {
+  parseTransactionExcel,
+  type ParsedRow,
+} from "../services/excelParser";
 
-const DEMO_EMAIL = "demo@local";
 const router = Router();
-
-async function getDemoUserId(): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_EMAIL },
-    select: { id: true },
-  });
-  return user?.id ?? null;
-}
+const upload = multer({ storage: multer.memoryStorage() });
 
 /** GET /?month=YYYY-MM (default: current month). Returns list with category and account. */
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     let monthStr = req.query.month as string | undefined;
     if (!monthStr) {
@@ -42,7 +36,7 @@ router.get("/", async (req: Request, res: Response) => {
         category: true,
         account: true,
       },
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { createdAt: "asc" }],
     });
 
     res.json(transactions);
@@ -52,13 +46,108 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+/** POST /upload multipart: file, accountId, expenseCategoryId, incomeCategoryId. Bulk create from Excel. */
+router.post(
+  "/upload",
+  upload.single("file"),
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const file = req.file;
+      const accountId = req.body?.accountId as string | undefined;
+      const expenseCategoryId = req.body?.expenseCategoryId as string | undefined;
+      const incomeCategoryId = req.body?.incomeCategoryId as string | undefined;
+
+      if (!file?.buffer) {
+        return res.status(400).json({ error: "File is required" });
+      }
+      if (!accountId?.trim()) {
+        return res.status(400).json({ error: "accountId is required" });
+      }
+      if (!expenseCategoryId?.trim()) {
+        return res.status(400).json({ error: "expenseCategoryId is required" });
+      }
+      if (!incomeCategoryId?.trim()) {
+        return res.status(400).json({ error: "incomeCategoryId is required" });
+      }
+
+      const [account, expenseCat, incomeCat] = await Promise.all([
+        prisma.account.findFirst({
+          where: { id: accountId.trim(), userId },
+          select: { id: true },
+        }),
+        prisma.category.findFirst({
+          where: { id: expenseCategoryId.trim(), userId, type: TransactionType.EXPENSE },
+          select: { id: true },
+        }),
+        prisma.category.findFirst({
+          where: { id: incomeCategoryId.trim(), userId, type: TransactionType.INCOME },
+          select: { id: true },
+        }),
+      ]);
+
+      if (!account) {
+        return res.status(404).json({ error: "Account not found" });
+      }
+      if (!expenseCat) {
+        return res.status(404).json({ error: "Expense category not found" });
+      }
+      if (!incomeCat) {
+        return res.status(404).json({ error: "Income category not found" });
+      }
+
+      let rows: ParsedRow[];
+      let skipped: number;
+      try {
+        const parsed = await parseTransactionExcel(file.buffer);
+        rows = parsed.rows;
+        skipped = parsed.skipped;
+      } catch (parseErr) {
+        const message =
+          parseErr instanceof Error
+            ? parseErr.message
+            : "엑셀 파일을 읽을 수 없습니다.";
+        return res.status(400).json({ error: message });
+      }
+
+      const created = [];
+
+      for (const row of rows) {
+        const categoryId = row.type === "INCOME" ? incomeCat.id : expenseCat.id;
+        const t = await prisma.transaction.create({
+          data: {
+            userId,
+            accountId: account.id,
+            categoryId,
+            type: row.type,
+            amount: row.amount,
+            date: row.date,
+            memo: row.memo ?? undefined,
+          },
+          include: {
+            category: true,
+            account: true,
+          },
+        });
+        created.push(t);
+      }
+
+      res.status(201).json({
+        created: created.length,
+        skipped,
+        transactions: created,
+      });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
 /** POST / body: type, amount, date, categoryId, accountId, memo?, isFixed?, scheduledAt?, labels? */
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const {
       type,
@@ -116,10 +205,7 @@ router.post("/", async (req: Request, res: Response) => {
 /** PUT /:id body: type?, amount?, date?, categoryId?, accountId?, memo?, isFixed?, scheduledAt?, labels? */
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { id } = req.params as { id: string };
     if (!id) {
@@ -204,10 +290,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 /** DELETE /:id - delete transaction owned by demo user */
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const userId = await getDemoUserId();
-    if (!userId) {
-      return res.status(404).json({ error: "Demo user not found" });
-    }
+    const userId = req.userId!;
 
     const { id } = req.params as { id: string };
     if (!id) {

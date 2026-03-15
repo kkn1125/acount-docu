@@ -20,4 +20,9 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
+    },
+  }
 ])

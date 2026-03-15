@@ -1,14 +1,15 @@
 import "dotenv/config";
 import express from "express";
 import http from "http";
-import { ensureDemoData } from "./db/seed";
+import cors from "cors";
 import accountsRouter from "./routes/accounts";
 import budgetsRouter from "./routes/budgets";
 import categoriesRouter from "./routes/categories";
 import summaryRouter from "./routes/summary";
 import transactionsRouter from "./routes/transactions";
 import userRouter from "./routes/user";
-import cors from "cors";
+import authRouter from "./routes/auth";
+import { requireAuth } from "./middleware/auth";
 
 console.log("[server] Starting...");
 process.on("unhandledRejection", (reason, promise) => {
@@ -30,12 +31,14 @@ export function createApp() {
     res.send("Hello World");
   });
 
-  app.use("/api/user", userRouter);
-  app.use("/api/transactions", transactionsRouter);
-  app.use("/api/categories", categoriesRouter);
-  app.use("/api/accounts", accountsRouter);
-  app.use("/api/summary", summaryRouter);
-  app.use("/api/budgets", budgetsRouter);
+  app.use("/api/auth", authRouter);
+
+  app.use("/api/user", requireAuth, userRouter);
+  app.use("/api/transactions", requireAuth, transactionsRouter);
+  app.use("/api/categories", requireAuth, categoriesRouter);
+  app.use("/api/accounts", requireAuth, accountsRouter);
+  app.use("/api/summary", requireAuth, summaryRouter);
+  app.use("/api/budgets", requireAuth, budgetsRouter);
 
   return app;
 }
@@ -45,12 +48,11 @@ const server = http.createServer(app);
 
 async function start() {
   try {
-    await ensureDemoData();
     server.listen(3000, () => {
       console.log("[server] Listening on http://localhost:3000");
     });
   } catch (err) {
-    console.error("[server] Failed to ensure demo data:", err);
+    console.error("[server] Failed to start:", err);
     process.exit(1);
   }
 }

@@ -6,6 +6,8 @@ import TransactionsPage from './pages/transactions/TransactionsPage'
 import BudgetPage from './pages/budget/BudgetPage'
 import AccountsPage from './pages/accounts/AccountsPage'
 import SettingsPage from './pages/settings/SettingsPage'
+import LoginPage from './pages/auth/LoginPage'
+import RequireAuth from './components/auth/RequireAuth'
 import { useCategoryStore } from './stores/categoryStore'
 import { useAccountStore } from './stores/accountStore'
 
@@ -23,12 +25,15 @@ const App: React.FC<AppProps> = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<PageTemplate />}>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
-          <Route path="/budget" element={<BudgetPage />} />
-          <Route path="/accounts" element={<AccountsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<RequireAuth />}>
+          <Route element={<PageTemplate />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/budget" element={<BudgetPage />} />
+            <Route path="/accounts" element={<AccountsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

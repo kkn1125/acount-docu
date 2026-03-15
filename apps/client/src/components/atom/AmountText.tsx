@@ -15,7 +15,7 @@ const fontSizeMap: Record<NonNullable<AmountTextProps['fontSize']>, number> = {
 
 const AmountText: React.FC<AmountTextProps> = ({ children, color = 'default', fontSize = 'md' }) => {
   const resolvedColor =
-    color === 'income' ? 'success.main' : color === 'expense' ? 'error.main' : 'text.primary'
+    color === 'income' ? 'income.main' : color === 'expense' ? 'expense.main' : 'text.primary'
 
   return (
     <Typography
