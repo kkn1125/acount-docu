@@ -2,7 +2,7 @@ import { Box, ToggleButton, ToggleButtonGroup, FormControl, InputLabel, Select, 
 import { Search as SearchIcon } from '@mui/icons-material'
 import type { SxProps, Theme } from '@mui/material'
 import type { TransactionTypeFilter } from '../../stores/uiStore'
-import { CATEGORY_LABEL_MAP } from '../../common/variable/categoryAccount'
+import { useCategoryStore } from '../../stores/categoryStore'
 
 interface FilterBarProps {
   typeFilter: TransactionTypeFilter
@@ -23,7 +23,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   onSearchChange,
   sx,
 }) => {
-  const categoryIds = Object.keys(CATEGORY_LABEL_MAP)
+  const categoryList = useCategoryStore((s) => s.categoryList)
 
   return (
     <Box
@@ -54,9 +54,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
           onChange={(e) => onCategoryChange(e.target.value || null)}
         >
           <MenuItem value="">전체</MenuItem>
-          {categoryIds.map((id) => (
-            <MenuItem key={id} value={id}>
-              {CATEGORY_LABEL_MAP[id]}
+          {categoryList.map((c) => (
+            <MenuItem key={c.id} value={c.id}>
+              {c.name}
             </MenuItem>
           ))}
         </Select>

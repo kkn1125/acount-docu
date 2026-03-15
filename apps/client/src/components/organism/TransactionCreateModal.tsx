@@ -9,9 +9,13 @@ import {
   Stack,
   MenuItem,
   InputAdornment,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material'
 import type { TransactionType } from '../../types/transaction'
-import { CATEGORY_LABEL_MAP, ACCOUNT_LABEL_MAP } from '../../common/variable/categoryAccount'
+import { useCategoryStore } from '../../stores/categoryStore'
+import { useAccountStore } from '../../stores/accountStore'
+import { useUiStore } from '../../stores/uiStore'
 
 interface TransactionCreateModalProps {
   open: boolean
@@ -43,30 +47,58 @@ const TransactionCreateModal: React.FC<TransactionCreateModalProps> = ({
   const [type, setType] = useState<TransactionType>('expense')
   const [amount, setAmount] = useState<string>('')
   const [date, setDate] = useState<string>(defaultDate ?? getTodayISO())
-  const [categoryId, setCategoryId] = useState<string>('food')
-  const [accountId, setAccountId] = useState<string>('cash')
+  const [categoryId, setCategoryId] = useState<string>('')
+  const [accountId, setAccountId] = useState<string>('')
   const [memo, setMemo] = useState<string>('')
+  const [isFixed, setIsFixed] = useState(false)
+
+  const categoryList = useCategoryStore((s) => s.categoryList)
+  const accountList = useAccountStore((s) => s.accountList)
+  const lastAccountId = useUiStore((s) => s.lastAccountId)
+  const setLastAccountId = useUiStore((s) => s.setLastAccountId)
+  const categoriesByType = categoryList.filter((c) => c.type === type)
+  const effectiveCategoryId = categoryId && categoriesByType.some((c) => c.id === categoryId)
+    ? categoryId
+    : categoriesByType[0]?.id ?? ''
+  const effectiveAccountId =
+    accountId && accountList.some((a) => a.id === accountId)
+      ? accountId
+      : lastAccountId && accountList.some((a) => a.id === lastAccountId)
+        ? lastAccountId
+        : accountList[0]?.id ?? ''
 
   useEffect(() => {
     if (open) {
       setDate(defaultDate ?? getTodayISO())
+      setIsFixed(false)
     }
   }, [open, defaultDate])
 
+  useEffect(() => {
+    if (open && accountList.length > 0 && !accountId) {
+      const defaultId =
+        lastAccountId && accountList.some((a) => a.id === lastAccountId)
+          ? lastAccountId
+          : accountList[0]?.id
+      if (defaultId) setAccountId(defaultId)
+    }
+  }, [open, accountList, lastAccountId, accountId])
+
   const handleSubmit = () => {
     const num = Number(amount.replace(/\D/g, ''))
-    if (!num || !date) return
+    if (!num || !date || !effectiveCategoryId) return
     const dateISO = new Date(date + 'T12:00:00').toISOString()
     onSubmit({
       type,
       amount: num,
       date: dateISO,
-      categoryId,
-      accountId,
+      categoryId: effectiveCategoryId,
+      accountId: effectiveAccountId,
       memo: memo.trim() || undefined,
-      isFixed: false,
+      isFixed,
       labelIds: [],
     })
+    setLastAccountId(effectiveAccountId)
     setAmount('')
     setDate(getTodayISO())
     setMemo('')
@@ -78,9 +110,6 @@ const TransactionCreateModal: React.FC<TransactionCreateModalProps> = ({
     setMemo('')
     onClose()
   }
-
-  const categoryIds = Object.keys(CATEGORY_LABEL_MAP)
-  const accountIds = Object.keys(ACCOUNT_LABEL_MAP)
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -122,28 +151,29 @@ const TransactionCreateModal: React.FC<TransactionCreateModalProps> = ({
           <TextField
             select
             label="카테고리"
-            value={categoryId}
+            value={effectiveCategoryId}
             onChange={(e) => setCategoryId(e.target.value)}
             fullWidth
             size="small"
           >
-            {categoryIds.map((id) => (
-              <MenuItem key={id} value={id}>
-                {CATEGORY_LABEL_MAP[id]}
+            {categoriesByType.map((c) => (
+              <MenuItem key={c.id} value={c.id}>
+                {c.name}
               </MenuItem>
             ))}
           </TextField>
           <TextField
             select
             label="결제수단"
-            value={accountId}
+            value={effectiveAccountId}
             onChange={(e) => setAccountId(e.target.value)}
             fullWidth
             size="small"
+            disabled={accountList.length === 0}
           >
-            {accountIds.map((id) => (
-              <MenuItem key={id} value={id}>
-                {ACCOUNT_LABEL_MAP[id]}
+            {accountList.map((a) => (
+              <MenuItem key={a.id} value={a.id}>
+                {a.name}
               </MenuItem>
             ))}
           </TextField>
@@ -156,6 +186,16 @@ const TransactionCreateModal: React.FC<TransactionCreateModalProps> = ({
             multiline
             rows={2}
           />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isFixed}
+                onChange={(e) => setIsFixed(e.target.checked)}
+                size="small"
+              />
+            }
+            label="고정비 / 정기 거래"
+          />
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -163,7 +203,7 @@ const TransactionCreateModal: React.FC<TransactionCreateModalProps> = ({
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={!amount || Number(amount) <= 0}
+          disabled={!amount || Number(amount) <= 0 || !effectiveCategoryId || !effectiveAccountId}
         >
           저장
         </Button>

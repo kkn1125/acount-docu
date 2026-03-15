@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -11,7 +8,6 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 enum AccountType {
@@ -20,79 +16,110 @@ enum AccountType {
   CASH
   INVESTMENT
   LOAN
+
+  @@map("account_type")
 }
 
 enum TransactionType {
   INCOME
   EXPENSE
   TRANSFER
+
+  @@map("transaction_type")
 }
 
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
+  id        String   @id @default(uuid())
+  email     String   @unique
   name      String?
-  currency  String     @default("KRW")
-  locale    String     @default("ko-KR")
-  timezone  String     @default("Asia/Seoul")
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  currency  String   @default("KRW")
+  locale    String   @default("ko-KR")
+  timezone  String   @default("Asia/Seoul")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  accounts      Account[]
-  categories    Category[]
-  transactions  Transaction[]
+  accounts     Account[]
+  categories   Category[]
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@map("user")
 }
 
 model Account {
-  id         String           @id @default(uuid())
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String
-  name       String
-  type       AccountType
-  balance    Decimal          @default(0)
-  isDefault  Boolean          @default(false)
-  isArchived Boolean          @default(false)
-  sortOrder  Int              @default(0)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  id                 String      @id @default(uuid())
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String      @map("user_id")
+  name               String
+  type               AccountType
+  balance            Decimal     @default(0)
+  /// 기준일 0시 시점 잔액 (가계부 시작일, 예: 2025-03-01)
+  initialBalanceDate DateTime?   @map("initial_balance_date")
+  initialBalance     Decimal?    @map("initial_balance")
+  isDefault          Boolean     @default(false) @map("is_default")
+  isArchived         Boolean     @default(false) @map("is_archived")
+  sortOrder          Int         @default(0) @map("sort_order")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
 
   transactions Transaction[]
+
+  @@map("account")
 }
 
 model Category {
-  id        String           @id @default(uuid())
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
+  id        String          @id @default(uuid())
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String          @map("user_id")
   name      String
   type      TransactionType
-  parentId  String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  parentId  String?         @map("parent_id")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
 
-  parent   Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[]  @relation("CategoryHierarchy")
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
 
   transactions Transaction[]
+  budgets      Budget[]
+
+  @@map("category")
+}
+
+model Budget {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @map("user_id")
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String   @map("category_id")
+  year       Int
+  month      Int
+  amount     Decimal
+  alertAt    Int?     @map("alert_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, categoryId, year, month])
+  @@map("budget")
 }
 
 model Transaction {
-  id          String           @id @default(uuid())
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  account     Account          @relation(fields: [accountId], references: [id])
-  accountId   String
-  category    Category         @relation(fields: [categoryId], references: [id])
-  categoryId  String
+  id          String          @id @default(uuid())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String          @map("user_id")
+  account     Account         @relation(fields: [accountId], references: [id])
+  accountId   String          @map("account_id")
+  category    Category        @relation(fields: [categoryId], references: [id])
+  categoryId  String          @map("category_id")
   type        TransactionType
-  /// 항상 양수 금액, type 으로 수입/지출/이체 구분
   amount      Decimal
   date        DateTime
-  scheduledAt DateTime?
-  isFixed     Boolean          @default(false)
+  scheduledAt DateTime?       @map("scheduled_at")
+  isFixed     Boolean         @default(false) @map("is_fixed")
   memo        String?
-  /// 라벨 문자열 배열을 JSON 으로 저장
   labels      Json?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-}
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
 
+  @@map("transaction")
+}

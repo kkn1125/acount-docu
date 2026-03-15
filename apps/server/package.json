@@ -4,7 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/main.ts"
+    "dev": "cross-env NODE_ENV=dev tsx src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "test": "vitest",
+    "seed": "tsx src/db/seed-run.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "prisma db seed",
+    "prisma:case": "prisma-case-format -f prisma/schema.prisma",
+    "prisma:case:dry": "prisma-case-format -f prisma/schema.prisma -D"
+  },
+  "prisma": {
+    "seed": "tsx src/db/seed-run.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,10 +39,15 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/node": "^25.3.5",
+    "@types/supertest": "^2.0.16",
     "cross-env": "^10.1.0",
     "dotenv": "^17.3.1",
+    "prisma-case-format": "^2.2.1",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3"
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
   }
 }

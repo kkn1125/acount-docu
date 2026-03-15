@@ -9,12 +9,32 @@ import {
 } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import type { TransactionItem } from '../../types/transaction'
+import type { CategoryItem } from '../../types/category'
 import AmountText from '../atom/AmountText'
-import {
-  CATEGORY_LABEL_MAP,
-  ACCOUNT_LABEL_MAP,
-  CATEGORY_COLOR_MAP,
-} from '../../common/variable/categoryAccount'
+import { useCategoryStore } from '../../stores/categoryStore'
+import { useAccountStore } from '../../stores/accountStore'
+
+const CATEGORY_PALETTE = [
+  '#ff9800',
+  '#4caf50',
+  '#2196f3',
+  '#9c27b0',
+  '#00bcd4',
+  '#f44336',
+  '#607d8b',
+  '#795548',
+]
+
+function getCategoryColor(categoryId: string, list: CategoryItem[]): string {
+  const idx = list.findIndex((c) => c.id === categoryId)
+  return CATEGORY_PALETTE[idx >= 0 ? idx % CATEGORY_PALETTE.length : 0]
+}
+
+function getCategoryName(transaction: TransactionItem, list: CategoryItem[]): string {
+  if (transaction.categoryName) return transaction.categoryName
+  const c = list.find((x) => x.id === transaction.categoryId)
+  return c?.name ?? transaction.categoryId
+}
 
 interface TransactionListItemProps {
   transaction: TransactionItem
@@ -22,13 +42,24 @@ interface TransactionListItemProps {
   onDelete?: (id: string) => void
 }
 
+function getAccountName(transaction: TransactionItem, accountList: { id: string; name: string }[]): string {
+  if (transaction.accountName) return transaction.accountName
+  const a = accountList.find((x) => x.id === transaction.accountId)
+  return a?.name ?? transaction.accountId
+}
+
 const TransactionListItem: React.FC<TransactionListItemProps> = ({
   transaction,
   onEdit,
   onDelete,
 }) => {
+  const categoryList = useCategoryStore((s) => s.categoryList)
+  const accountList = useAccountStore((s) => s.accountList)
   const isExpense = transaction.type === 'expense'
   const isIncome = transaction.type === 'income'
+  const categoryName = getCategoryName(transaction, categoryList)
+  const categoryColor = getCategoryColor(transaction.categoryId, categoryList)
+  const accountName = getAccountName(transaction, accountList)
 
   const handleDelete = () => {
     if (onDelete && window.confirm('이 거래를 삭제할까요?')) {
@@ -43,7 +74,7 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({
         borderRadius: 2,
         mb: 1,
         borderLeft: 3,
-        borderLeftColor: CATEGORY_COLOR_MAP[transaction.categoryId] ?? 'divider',
+        borderLeftColor: categoryColor,
         '&:hover .transaction-actions': { opacity: 1 },
       }}
     >
@@ -58,15 +89,17 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
           <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="body1">
-              {CATEGORY_LABEL_MAP[transaction.categoryId] ?? transaction.categoryId}
+              {categoryName}
             </Typography>
             {transaction.memo && (
               <Typography variant="body2" color="text.secondary" noWrap>
                 {transaction.memo}
               </Typography>
             )}
-            <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
-              {transaction.isFixed && <Chip size="small" label="고정" color="default" />}
+            <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+              {transaction.isFixed && (
+                <Chip size="small" label="고정비" variant="outlined" color="primary" sx={{ fontWeight: 500 }} />
+              )}
               {transaction.scheduledAt && (
                 <Chip size="small" label="예정" variant="outlined" color="primary" />
               )}
@@ -79,7 +112,7 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({
                 {transaction.amount.toLocaleString()}
               </AmountText>
               <Typography variant="caption" color="text.secondary">
-                {ACCOUNT_LABEL_MAP[transaction.accountId] ?? transaction.accountId}
+                {accountName}
               </Typography>
             </Stack>
             <Stack

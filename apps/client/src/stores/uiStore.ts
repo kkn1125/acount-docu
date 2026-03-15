@@ -16,6 +16,9 @@ interface UiState {
   transactionTypeFilter: TransactionTypeFilter
   categoryIdFilter: string | null
   searchKeyword: string
+  isQuickAddSheetOpen: boolean
+  lastAccountId: string
+  recentCategoryIds: string[]
 }
 
 interface UiAction {
@@ -26,6 +29,10 @@ interface UiAction {
   setCategoryIdFilter: (v: string | null) => void
   setSearchKeyword: (v: string) => void
   resetFilters: () => void
+  openQuickAddSheet: () => void
+  closeQuickAddSheet: () => void
+  setLastAccountId: (id: string) => void
+  pushRecentCategoryId: (id: string) => void
 }
 
 export type UiStore = UiState & UiAction
@@ -44,6 +51,9 @@ export const useUiStore = create<UiStore>()(
         transactionTypeFilter: 'all',
         categoryIdFilter: null,
         searchKeyword: '',
+        isQuickAddSheetOpen: false,
+        lastAccountId: 'cash',
+        recentCategoryIds: [],
         setViewMode: (mode) => set({ viewMode: mode }),
         openDateDetailPanel: (dateKey) =>
           set({
@@ -62,6 +72,13 @@ export const useUiStore = create<UiStore>()(
             categoryIdFilter: null,
             searchKeyword: '',
           }),
+        openQuickAddSheet: () => set({ isQuickAddSheetOpen: true }),
+        closeQuickAddSheet: () => set({ isQuickAddSheetOpen: false }),
+        setLastAccountId: (id) => set({ lastAccountId: id }),
+        pushRecentCategoryId: (id) =>
+          set((state) => ({
+            recentCategoryIds: [id, ...state.recentCategoryIds.filter((c) => c !== id)].slice(0, 3),
+          })),
       }),
       {
         name: 'budget-ui',

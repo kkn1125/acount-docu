@@ -14,7 +14,10 @@ export interface TransactionItem {
   scheduledAt?: string
   isFixed: boolean
   categoryId: string
+  /** 서버 응답에 category 포함 시 채워짐 */
+  categoryName?: string
   accountId: string
+  accountName?: string
   memo?: string
   labelIds: string[]
 }

@@ -1,68 +1,57 @@
-import { useMemo } from 'react'
-import { Box, Typography } from '@mui/material'
+import { useEffect, useMemo } from 'react'
+import { Box, Typography, Paper } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 import MonthNavigator from '../../components/molecular/MonthNavigator'
-import MonthlySummaryCards from '../../components/organism/MonthlySummaryCards'
-import ViewModeSwitch from '../../components/molecular/ViewModeSwitch'
-import CalendarSection from '../../components/organism/CalendarSection'
-import TransactionList from '../../components/organism/TransactionList'
-import DateDetailPanel from '../../components/organism/DateDetailPanel'
-import FilterBar from '../../components/molecular/FilterBar'
+import DashboardHero from '../../components/organism/DashboardHero'
+import BudgetGauge from '../../components/organism/BudgetGauge'
 import RecentTransactions from '../../components/organism/RecentTransactions'
 import { useTransactionStore } from '../../stores/transactionStore'
-import { useUiStore } from '../../stores/uiStore'
+import { useSummaryStore } from '../../stores/summaryStore'
+import { useAccountStore } from '../../stores/accountStore'
 import { isDateInMonth } from '../../utils/dateUtils'
-import { CATEGORY_LABEL_MAP } from '../../common/variable/categoryAccount'
 
 interface DashboardPageProps {}
 
 const RECENT_COUNT = 5
 
 const DashboardPage: React.FC<DashboardPageProps> = () => {
+  const navigate = useNavigate()
   const selectedMonth = useTransactionStore((s) => s.selectedMonth)
   const transactions = useTransactionStore((s) => s.transactions)
   const prevMonth = useTransactionStore((s) => s.prevMonth)
   const nextMonth = useTransactionStore((s) => s.nextMonth)
   const goToToday = useTransactionStore((s) => s.goToToday)
-
-  const viewMode = useUiStore((s) => s.viewMode)
-  const setViewMode = useUiStore((s) => s.setViewMode)
-  const openDateDetailPanel = useUiStore((s) => s.openDateDetailPanel)
-  const dateDetailPanel = useUiStore((s) => s.dateDetailPanel)
-  const closeDateDetailPanel = useUiStore((s) => s.closeDateDetailPanel)
-  const transactionTypeFilter = useUiStore((s) => s.transactionTypeFilter)
-  const categoryIdFilter = useUiStore((s) => s.categoryIdFilter)
-  const searchKeyword = useUiStore((s) => s.searchKeyword)
-  const setTransactionTypeFilter = useUiStore((s) => s.setTransactionTypeFilter)
-  const setCategoryIdFilter = useUiStore((s) => s.setCategoryIdFilter)
-  const setSearchKeyword = useUiStore((s) => s.setSearchKeyword)
-
-  const openCreateModal = useTransactionStore((s) => s.openCreateModal)
   const openEditModal = useTransactionStore((s) => s.openEditModal)
   const deleteTransaction = useTransactionStore((s) => s.deleteTransaction)
+  const fetchTransactions = useTransactionStore((s) => s.fetchTransactions)
 
-  const handleAddForDate = (dateKey: string) => {
-    openCreateModal(dateKey)
-    closeDateDetailPanel()
+  const summary = useSummaryStore((s) => s.summary)
+  const setSelectedMonth = useSummaryStore((s) => s.setSelectedMonth)
+  const fetchSummary = useSummaryStore((s) => s.fetchSummary)
+  const accountList = useAccountStore((s) => s.accountList)
+  const totalAssets = useMemo(
+    () => accountList.reduce((sum, a) => sum + (a.balance ?? 0), 0),
+    [accountList],
+  )
+
+  const handleDeleteTransaction = async (id: string) => {
+    await deleteTransaction(id)
+    void fetchSummary()
   }
+
+  useEffect(() => {
+    void fetchTransactions(selectedMonth)
+  }, [selectedMonth, fetchTransactions])
+
+  useEffect(() => {
+    const [yearStr, monthStr] = selectedMonth.split('-').map(Number)
+    if (yearStr && monthStr) setSelectedMonth(yearStr, monthStr)
+  }, [selectedMonth, setSelectedMonth])
 
   const monthTransactions = useMemo(
     () => transactions.filter((t) => isDateInMonth(t.date, selectedMonth)),
     [transactions, selectedMonth],
   )
-
-  const { totalIncome, totalExpense, remain } = useMemo(() => {
-    let income = 0
-    let expense = 0
-    for (const t of monthTransactions) {
-      if (t.type === 'income') income += t.amount
-      if (t.type === 'expense') expense += t.amount
-    }
-    return {
-      totalIncome: income,
-      totalExpense: expense,
-      remain: income - expense,
-    }
-  }, [monthTransactions])
 
   const recentTransactions = useMemo(() => {
     const sorted = [...monthTransactions].sort(
@@ -71,33 +60,8 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
     return sorted.slice(0, RECENT_COUNT)
   }, [monthTransactions])
 
-  const filteredMonthTransactions = useMemo(() => {
-    let list = monthTransactions
-    if (transactionTypeFilter !== 'all') {
-      list = list.filter((t) => t.type === transactionTypeFilter)
-    }
-    if (categoryIdFilter) {
-      list = list.filter((t) => t.categoryId === categoryIdFilter)
-    }
-    if (searchKeyword.trim()) {
-      const kw = searchKeyword.trim().toLowerCase()
-      list = list.filter((t) => {
-        const memo = (t.memo ?? '').toLowerCase()
-        const cat = (CATEGORY_LABEL_MAP[t.categoryId] ?? t.categoryId).toLowerCase()
-        return memo.includes(kw) || cat.includes(kw)
-      })
-    }
-    return list
-  }, [
-    monthTransactions,
-    transactionTypeFilter,
-    categoryIdFilter,
-    searchKeyword,
-  ])
-
-  const handleSelectDate = (dateKey: string) => {
-    openDateDetailPanel(dateKey)
-  }
+  const hasNoTransactions = monthTransactions.length === 0
+  const categoryBreakdown = summary?.categoryBreakdown ?? []
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -108,64 +72,81 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
         onToday={goToToday}
         sx={{ mb: 2 }}
       />
-      <MonthlySummaryCards
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        remain={remain}
-      />
-      <ViewModeSwitch value={viewMode} onChange={setViewMode} />
+      <Box sx={{ mb: 3 }}>
+        <DashboardHero />
+      </Box>
 
-      {viewMode === 'list' && (
-        <>
-          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-            거래 내역
+      <Paper
+        variant="outlined"
+        sx={{
+          py: 1.5,
+          px: 2,
+          mb: 2,
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          총 자산 (수중 자금)
+        </Typography>
+        <Typography variant="body1" fontWeight={600} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          ₩{totalAssets.toLocaleString()}
+        </Typography>
+      </Paper>
+
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+        카테고리별 예산
+      </Typography>
+      <Box sx={{ mb: 3 }}>
+        {categoryBreakdown.length === 0 && !hasNoTransactions ? (
+          <Typography variant="body2" color="text.secondary">
+            이번 달 카테고리별 지출이 없어요.
           </Typography>
-          <FilterBar
-            typeFilter={transactionTypeFilter}
-            categoryFilter={categoryIdFilter}
-            searchKeyword={searchKeyword}
-            onTypeChange={setTransactionTypeFilter}
-            onCategoryChange={setCategoryIdFilter}
-            onSearchChange={setSearchKeyword}
-          />
-          <TransactionList
-            transactions={filteredMonthTransactions}
-            onAddClick={openCreateModal}
-            onEdit={openEditModal}
-            onDelete={deleteTransaction}
-          />
-        </>
-      )}
-
-      {viewMode === 'calendar' && (
-        <>
-          <CalendarSection
-            monthKey={selectedMonth}
-            transactions={transactions}
-            selectedDateKey={dateDetailPanel.dateKey}
-            onSelectDate={handleSelectDate}
-          />
-          <Box sx={{ mt: 3 }}>
-            <RecentTransactions
-              transactions={recentTransactions}
-              onShowFullList={() => setViewMode('list')}
-              onEdit={openEditModal}
-              onDelete={deleteTransaction}
-              maxCount={RECENT_COUNT}
+        ) : (
+          categoryBreakdown.map((item) => (
+            <BudgetGauge
+              key={item.categoryId}
+              categoryId={item.categoryId}
+              categoryName={item.categoryName}
+              spent={item.spent}
+              budget={item.budget ?? null}
+              onClick={() => navigate(`/transactions?categoryId=${item.categoryId}`)}
             />
-          </Box>
-        </>
-      )}
+          ))
+        )}
+      </Box>
 
-      <DateDetailPanel
-        open={dateDetailPanel.open}
-        dateKey={dateDetailPanel.dateKey}
-        transactions={transactions}
-        onClose={closeDateDetailPanel}
-        onAddForDate={handleAddForDate}
-        onEdit={openEditModal}
-        onDelete={deleteTransaction}
-      />
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+        최근 거래
+      </Typography>
+      {hasNoTransactions ? (
+        <Box
+          sx={{
+            py: 4,
+            px: 2,
+            textAlign: 'center',
+            bgcolor: 'action.hover',
+            borderRadius: 2,
+          }}
+        >
+          <Typography color="text.secondary" sx={{ mb: 0.5 }}>
+            아직 등록된 거래가 없어요.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            아래 + 버튼으로 첫 거래를 등록해 보세요.
+          </Typography>
+        </Box>
+      ) : (
+        <RecentTransactions
+          transactions={recentTransactions}
+          onShowFullList={() => navigate('/transactions')}
+          onEdit={openEditModal}
+          onDelete={handleDeleteTransaction}
+          maxCount={RECENT_COUNT}
+        />
+      )}
     </Box>
   )
 }

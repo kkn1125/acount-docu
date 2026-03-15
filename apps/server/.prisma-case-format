@@ -1,0 +1,4 @@
+# prisma-case-format 설정
+# 테이블/필드: 코드는 pascal·camel, DB는 snake_case
+default: "table=pascal; mapTable=snake; field=camel; mapField=snake; enum=pascal; mapEnum=snake"
+uses_next_auth: false

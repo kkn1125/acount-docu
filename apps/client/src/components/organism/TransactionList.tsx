@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { Box, Typography, Button } from '@mui/material'
 import { Add as AddIcon } from '@mui/icons-material'
 import type { TransactionItem } from '../../types/transaction'
-import TransactionListItem from '../molecular/TransactionListItem'
+import SwipeableTransactionItem from '../molecular/SwipeableTransactionItem'
 import DateGroupHeader from '../molecular/DateGroupHeader'
 
 interface TransactionListProps {
@@ -81,7 +81,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
               totalIncome={totalIncome}
             />
             {items.map((transaction) => (
-              <TransactionListItem
+              <SwipeableTransactionItem
                 key={transaction.id}
                 transaction={transaction}
                 onEdit={onEdit}

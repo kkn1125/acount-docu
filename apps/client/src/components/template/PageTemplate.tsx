@@ -1,18 +1,20 @@
 import { useMemo } from 'react'
-import { AppBar, Box, Container, Toolbar, Typography, Fab } from '@mui/material'
-import { Add as AddIcon } from '@mui/icons-material'
-import { Outlet, useLocation } from 'react-router-dom'
+import { AppBar, Box, Container, Toolbar, Typography } from '@mui/material'
+import { Outlet } from 'react-router-dom'
 import { useTransactionStore } from '../../stores/transactionStore'
+import { useUiStore } from '../../stores/uiStore'
 import TransactionCreateModal from '../organism/TransactionCreateModal'
 import TransactionEditModal from '../organism/TransactionEditModal'
+import QuickAddSheet from '../organism/QuickAddSheet'
+import BottomNav from '../organism/BottomNav'
 
 interface PageTemplateProps {}
 
 const PageTemplate: React.FC<PageTemplateProps> = () => {
-  const location = useLocation()
   const isCreateModalOpen = useTransactionStore((s) => s.isCreateModalOpen)
+  const isQuickAddSheetOpen = useUiStore((s) => s.isQuickAddSheetOpen)
+  const closeQuickAddSheet = useUiStore((s) => s.closeQuickAddSheet)
   const createModalDefaultDate = useTransactionStore((s) => s.createModalDefaultDate)
-  const openCreateModal = useTransactionStore((s) => s.openCreateModal)
   const closeCreateModal = useTransactionStore((s) => s.closeCreateModal)
   const addTransaction = useTransactionStore((s) => s.addTransaction)
   const editingTransactionId = useTransactionStore((s) => s.editingTransactionId)
@@ -27,8 +29,6 @@ const PageTemplate: React.FC<PageTemplateProps> = () => {
         : null,
     [editingTransactionId, transactions],
   )
-
-  const isDashboard = location.pathname === '/'
 
   return (
     <>
@@ -49,21 +49,12 @@ const PageTemplate: React.FC<PageTemplateProps> = () => {
         >
           <Outlet />
         </Container>
-        {isDashboard && (
-          <Fab
-            color="primary"
-            aria-label="거래 추가"
-            onClick={openCreateModal}
-            sx={{
-              position: 'fixed',
-              right: 24,
-              bottom: 24,
-            }}
-          >
-            <AddIcon />
-          </Fab>
-        )}
+        <BottomNav />
       </Box>
+      <QuickAddSheet
+        open={isQuickAddSheetOpen}
+        onClose={closeQuickAddSheet}
+      />
       <TransactionCreateModal
         open={isCreateModalOpen}
         defaultDate={createModalDefaultDate}
@@ -71,6 +62,7 @@ const PageTemplate: React.FC<PageTemplateProps> = () => {
         onSubmit={addTransaction}
       />
       <TransactionEditModal
+        key={editingTransactionId ?? 'edit-modal-closed'}
         open={!!editingTransactionId}
         transaction={editingTransaction}
         onClose={closeEditModal}
